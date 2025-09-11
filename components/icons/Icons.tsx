@@ -31,6 +31,14 @@ export const ThermometerIcon: React.FC = () => (
     <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.5 3.5a2.5 2.5 0 00-5 0v9.563a4.5 4.5 0 105 0V3.5z" /></svg>
 );
 
+export const AngleIcon: React.FC = () => (
+    <svg className="w-8 h-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M21.17 12H2.83" />
+        <path d="M12 2a10 10 0 0 0-10 10" />
+        <path d="M12 12l7.07 7.07" />
+    </svg>
+);
+
 export const MapPinIcon: React.FC = () => (
     <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
 );
