@@ -5,7 +5,7 @@ import Gauge from '../components/Gauge';
 import BatteryGauge from '../components/BatteryGauge';
 import RealtimeChart from '../components/RealtimeChart';
 import MapView from '../components/MapView';
-import { SunIcon, ZapIcon, ThermometerIcon, MapPinIcon } from '../components/icons/Icons';
+import { SunIcon, ZapIcon, ThermometerIcon, AngleIcon } from '../components/icons/Icons';
 
 interface DashboardViewProps {
   data: SolarData;
@@ -28,7 +28,7 @@ const DashboardView: React.FC<DashboardViewProps> = ({ data, isLive }) => {
         <DataCard title="Energy Output" value={data.energy} unit="kWh" icon={<ZapIcon />} colorClass="text-yellow-400"/>
         <DataCard title="Light Intensity" value={data.intensity} unit="lux" icon={<SunIcon />} colorClass="text-orange-400"/>
         <DataCard title="Temperature" value={data.temperature} unit="°C" icon={<ThermometerIcon />} colorClass="text-red-400"/>
-        <DataCard title="Location" value={`${data.gps.lat.toFixed(3)}, ${data.gps.lng.toFixed(3)}`} unit="" icon={<MapPinIcon />} colorClass="text-blue-400"/>
+        <DataCard title="Servo Angle" value={data.servoAngle} unit="°" icon={<AngleIcon />} colorClass="text-purple-400"/>
 
         {/* Gauges */}
         <div className="md:col-span-1 lg:col-span-2">
