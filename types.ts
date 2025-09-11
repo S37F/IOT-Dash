@@ -12,6 +12,7 @@ export interface SolarData {
   intensity: number;
   temperature: number;
   gps: GPS;
+  servoAngle: number;
 }
 
 export type ViewType = 'dashboard' | 'analytics';
