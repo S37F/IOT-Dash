@@ -13,6 +13,7 @@ const generateHistoricalData = (): SolarData[] => {
     const isDay = hour > 6 && hour < 20;
     const intensity = isDay ? Math.random() * 800 + 200 : Math.random() * 50;
     const energy = isDay ? parseFloat((Math.random() * 15 + 10 + Math.sin(hour/24 * Math.PI) * 10).toFixed(1)) : 0;
+    const servoAngle = isDay ? Math.round(90 + 75 * Math.sin(((hour - 6) / 14) * Math.PI)) : 0;
     
     data.push({
       timestamp: timestamp.toISOString(),
@@ -21,6 +22,7 @@ const generateHistoricalData = (): SolarData[] => {
       battery: parseFloat((Math.random() * 40 + 60).toFixed(0)), // Assume mostly charged
       intensity: parseFloat(intensity.toFixed(0)),
       temperature: parseFloat((Math.random() * 15 + 15).toFixed(0)),
+      servoAngle: servoAngle,
       gps: { lat: 51.5074, lng: -0.1278 }, // Static London location
     });
   }
@@ -34,6 +36,7 @@ const initialData: SolarData = {
   battery: 0,
   intensity: 0,
   temperature: 0,
+  servoAngle: 45,
   gps: { lat: 51.5074, lng: -0.1278 },
 };
 
@@ -43,6 +46,7 @@ const generateRandomData = (previousData: SolarData): SolarData => {
     const battery = Math.floor(Math.random() * 101);      // Range: 0-100
     const intensity = Math.floor(Math.random() * 901) + 100; // Range: 100-1000
     const temperature = Math.floor(Math.random() * 26) + 10; // Range: 10-35
+    const servoAngle = Math.floor(Math.random() * 181); // Range 0-180
   
     // Slightly randomize GPS coordinates to simulate movement
     const lat = previousData.gps.lat + (Math.random() - 0.5) / 2500;
@@ -55,6 +59,7 @@ const generateRandomData = (previousData: SolarData): SolarData => {
       battery: battery,
       intensity: intensity,
       temperature: temperature,
+      servoAngle: servoAngle,
       gps: { 
         lat: parseFloat(lat.toFixed(4)), 
         lng: parseFloat(lng.toFixed(4)) 
@@ -82,6 +87,7 @@ export const useSolarData = (isLive: boolean) => {
           battery: data.battery ?? 0,
           intensity: data.intensity ?? 0,
           temperature: data.temperature ?? 0,
+          servoAngle: data.servoAngle ?? 45,
           gps: data.gps ?? { lat: 51.5074, lng: -0.1278 },
         };
         setLatestData(mappedData);
