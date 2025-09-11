@@ -23,6 +23,7 @@ const generateHistoricalData = (): SolarData[] => {
       intensity: parseFloat(intensity.toFixed(0)),
       temperature: parseFloat((Math.random() * 15 + 15).toFixed(0)),
       servoAngle: servoAngle,
+      motionDetected: Math.random() < 0.05, // 5% chance of motion detection in the past
       gps: { lat: 51.5074, lng: -0.1278 }, // Static London location
     });
   }
@@ -37,6 +38,7 @@ const initialData: SolarData = {
   intensity: 0,
   temperature: 0,
   servoAngle: 45,
+  motionDetected: false,
   gps: { lat: 51.5074, lng: -0.1278 },
 };
 
@@ -47,6 +49,7 @@ const generateRandomData = (previousData: SolarData): SolarData => {
     const intensity = Math.floor(Math.random() * 901) + 100; // Range: 100-1000
     const temperature = Math.floor(Math.random() * 26) + 10; // Range: 10-35
     const servoAngle = Math.floor(Math.random() * 181); // Range 0-180
+    const motionDetected = Math.random() > 0.8; // 20% chance of being detected
   
     // Slightly randomize GPS coordinates to simulate movement
     const lat = previousData.gps.lat + (Math.random() - 0.5) / 2500;
@@ -60,6 +63,7 @@ const generateRandomData = (previousData: SolarData): SolarData => {
       intensity: intensity,
       temperature: temperature,
       servoAngle: servoAngle,
+      motionDetected: motionDetected,
       gps: { 
         lat: parseFloat(lat.toFixed(4)), 
         lng: parseFloat(lng.toFixed(4)) 
@@ -88,6 +92,7 @@ export const useSolarData = (isLive: boolean) => {
           intensity: data.intensity ?? 0,
           temperature: data.temperature ?? 0,
           servoAngle: data.servoAngle ?? 45,
+          motionDetected: data.motionDetected ?? false,
           gps: data.gps ?? { lat: 51.5074, lng: -0.1278 },
         };
         setLatestData(mappedData);
