@@ -39,6 +39,18 @@ export const AngleIcon: React.FC = () => (
     </svg>
 );
 
+export const MotionSensorIcon: React.FC = () => (
+    <svg className="w-8 h-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 12m-1 0a1 1 0 1 0 2 0a1 1 0 1 0-2 0"></path>
+      <path d="M15.5 15.5l.01.01"></path>
+      <path d="M8.5 15.5l.01.01"></path>
+      <path d="M12 8.5l.01.01"></path>
+      <path d="M12 19.22A7.5 7.5 0 0 0 12 4.78"></path>
+      <path d="M4.78 12A7.5 7.5 0 0 0 19.22 12"></path>
+    </svg>
+);
+
+
 export const MapPinIcon: React.FC = () => (
     <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
 );
