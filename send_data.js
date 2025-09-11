@@ -19,6 +19,7 @@ setInterval(async () => {
   const intensity = Math.floor(Math.random() * 901) + 100; // Range: 100-1000
   const temperature = Math.floor(Math.random() * 26) + 10; // Range: 10-35
   const servoAngle = Math.floor(Math.random() * 181);      // Range: 0-180
+  const motionDetected = Math.random() > 0.8; // 20% chance of detection
 
   // Slightly randomize GPS coordinates to simulate movement
   lat += (Math.random() - 0.5) / 2500;
@@ -32,6 +33,7 @@ setInterval(async () => {
     intensity,
     temperature,
     servoAngle,
+    motionDetected,
     gps: { 
       lat: parseFloat(lat.toFixed(4)), 
       lng: parseFloat(lng.toFixed(4)) 
