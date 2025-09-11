@@ -13,6 +13,7 @@ export interface SolarData {
   temperature: number;
   gps: GPS;
   servoAngle: number;
+  motionDetected: boolean;
 }
 
 export type ViewType = 'dashboard' | 'analytics';
