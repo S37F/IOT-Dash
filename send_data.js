@@ -18,6 +18,7 @@ setInterval(async () => {
   const battery = Math.floor(Math.random() * 101);      // Range: 0-100
   const intensity = Math.floor(Math.random() * 901) + 100; // Range: 100-1000
   const temperature = Math.floor(Math.random() * 26) + 10; // Range: 10-35
+  const servoAngle = Math.floor(Math.random() * 181);      // Range: 0-180
 
   // Slightly randomize GPS coordinates to simulate movement
   lat += (Math.random() - 0.5) / 2500;
@@ -30,6 +31,7 @@ setInterval(async () => {
     battery,
     intensity,
     temperature,
+    servoAngle,
     gps: { 
       lat: parseFloat(lat.toFixed(4)), 
       lng: parseFloat(lng.toFixed(4)) 
