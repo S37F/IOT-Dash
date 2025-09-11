@@ -1,10 +1,11 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import type { SolarData } from '../types';
 import DataCard from '../components/DataCard';
 import Gauge from '../components/Gauge';
 import BatteryGauge from '../components/BatteryGauge';
 import RealtimeChart from '../components/RealtimeChart';
 import MapView from '../components/MapView';
+import PausableWrapper from '../components/PausableWrapper';
 import { SunIcon, ZapIcon, ThermometerIcon, AngleIcon } from '../components/icons/Icons';
 
 interface DashboardViewProps {
@@ -13,10 +14,33 @@ interface DashboardViewProps {
 }
 
 const DashboardView: React.FC<DashboardViewProps> = ({ data, isLive }) => {
+  const [pausedStates, setPausedStates] = useState<Record<string, boolean>>({});
+  const [displayData, setDisplayData] = useState<SolarData>(data);
+
+  useEffect(() => {
+    // This effect synchronizes the display data with the incoming live data, respecting paused states.
+    // It runs whenever a new `data` prop is received.
+    setDisplayData(currentDisplayData => ({
+      timestamp: data.timestamp, // Always update timestamp
+      energy: pausedStates.energy ? currentDisplayData.energy : data.energy,
+      // For chart values, check the chart's pause state first, then the individual card's.
+      intensity: pausedStates.envChart ? currentDisplayData.intensity : (pausedStates.intensity ? currentDisplayData.intensity : data.intensity),
+      temperature: pausedStates.envChart ? currentDisplayData.temperature : (pausedStates.temperature ? currentDisplayData.temperature : data.temperature),
+      servoAngle: pausedStates.servoAngle ? currentDisplayData.servoAngle : data.servoAngle,
+      efficiency: pausedStates.efficiency ? currentDisplayData.efficiency : data.efficiency,
+      battery: pausedStates.battery ? currentDisplayData.battery : data.battery,
+      gps: pausedStates.map ? currentDisplayData.gps : data.gps,
+    }));
+  }, [data]);
+
+  const togglePause = (id: string) => {
+    setPausedStates(prev => ({ ...prev, [id]: !prev[id] }));
+  };
+
   return (
     <div className="relative">
        {!isLive && (
-        <div className="absolute inset-0 bg-slate-800/80 backdrop-blur-sm flex items-center justify-center z-10 rounded-lg">
+        <div className="absolute inset-0 bg-slate-800/80 backdrop-blur-sm flex items-center justify-center z-30 rounded-lg">
           <div className="text-center p-8 bg-slate-900 rounded-xl shadow-lg border border-slate-700">
             <h2 className="text-2xl font-bold text-yellow-400 mb-2">Data Paused</h2>
             <p className="text-slate-300">Real-time updates are paused. Press 'Live' in the header to resume.</p>
@@ -25,35 +49,51 @@ const DashboardView: React.FC<DashboardViewProps> = ({ data, isLive }) => {
       )}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
         {/* Data Cards */}
-        <DataCard title="Energy Output" value={data.energy} unit="kWh" icon={<ZapIcon />} colorClass="text-yellow-400"/>
-        <DataCard title="Light Intensity" value={data.intensity} unit="lux" icon={<SunIcon />} colorClass="text-orange-400"/>
-        <DataCard title="Temperature" value={data.temperature} unit="°C" icon={<ThermometerIcon />} colorClass="text-red-400"/>
-        <DataCard title="Servo Angle" value={data.servoAngle} unit="°" icon={<AngleIcon />} colorClass="text-purple-400"/>
+        <PausableWrapper isPaused={!!pausedStates.energy} onTogglePause={() => togglePause('energy')} isLive={isLive}>
+          <DataCard title="Energy Output" value={displayData.energy} unit="kWh" icon={<ZapIcon />} colorClass="text-yellow-400"/>
+        </PausableWrapper>
+        <PausableWrapper isPaused={!!pausedStates.intensity} onTogglePause={() => togglePause('intensity')} isLive={isLive}>
+          <DataCard title="Light Intensity" value={displayData.intensity} unit="lux" icon={<SunIcon />} colorClass="text-orange-400"/>
+        </PausableWrapper>
+        <PausableWrapper isPaused={!!pausedStates.temperature} onTogglePause={() => togglePause('temperature')} isLive={isLive}>
+          <DataCard title="Temperature" value={displayData.temperature} unit="°C" icon={<ThermometerIcon />} colorClass="text-red-400"/>
+        </PausableWrapper>
+        <PausableWrapper isPaused={!!pausedStates.servoAngle} onTogglePause={() => togglePause('servoAngle')} isLive={isLive}>
+          <DataCard title="Servo Angle" value={displayData.servoAngle} unit="°" icon={<AngleIcon />} colorClass="text-purple-400"/>
+        </PausableWrapper>
 
         {/* Gauges */}
         <div className="md:col-span-1 lg:col-span-2">
-          <Gauge value={data.efficiency} label="Solar Efficiency" color="#22d3ee" />
+          <PausableWrapper isPaused={!!pausedStates.efficiency} onTogglePause={() => togglePause('efficiency')} isLive={isLive}>
+            <Gauge value={displayData.efficiency} label="Solar Efficiency" color="#22d3ee" />
+          </PausableWrapper>
         </div>
         <div className="md:col-span-1 lg:col-span-2">
-          <BatteryGauge percentage={Math.round(data.battery)} isCharging={data.energy > 5} />
+          <PausableWrapper isPaused={!!pausedStates.battery} onTogglePause={() => togglePause('battery')} isLive={isLive}>
+            <BatteryGauge percentage={Math.round(displayData.battery)} isCharging={displayData.energy > 5} />
+          </PausableWrapper>
         </div>
         
         {/* Realtime Chart */}
         <div className="md:col-span-2 lg:col-span-4">
-          <RealtimeChart 
-            title="Live Environment Data"
-            dataPoint1={data.temperature} 
-            label1="Temperature (°C)" 
-            color1="#f87171" 
-            dataPoint2={data.intensity} 
-            label2="Intensity (lux)" 
-            color2="#fb923c"
-          />
+          <PausableWrapper isPaused={!!pausedStates.envChart} onTogglePause={() => togglePause('envChart')} isLive={isLive}>
+            <RealtimeChart 
+              title="Live Environment Data"
+              dataPoint1={displayData.temperature} 
+              label1="Temperature (°C)" 
+              color1="#f87171" 
+              dataPoint2={displayData.intensity} 
+              label2="Intensity (lux)" 
+              color2="#fb923c"
+            />
+          </PausableWrapper>
         </div>
 
         {/* Map */}
         <div className="md:col-span-2 lg:col-span-4">
-          <MapView gps={data.gps} />
+          <PausableWrapper isPaused={!!pausedStates.map} onTogglePause={() => togglePause('map')} isLive={isLive}>
+            <MapView gps={displayData.gps} />
+          </PausableWrapper>
         </div>
       </div>
     </div>
