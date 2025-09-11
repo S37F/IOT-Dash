@@ -6,7 +6,7 @@ import BatteryGauge from '../components/BatteryGauge';
 import RealtimeChart from '../components/RealtimeChart';
 import MapView from '../components/MapView';
 import PausableWrapper from '../components/PausableWrapper';
-import { SunIcon, ZapIcon, ThermometerIcon, AngleIcon } from '../components/icons/Icons';
+import { SunIcon, ZapIcon, ThermometerIcon, AngleIcon, MotionSensorIcon } from '../components/icons/Icons';
 
 interface DashboardViewProps {
   data: SolarData;
@@ -27,11 +27,12 @@ const DashboardView: React.FC<DashboardViewProps> = ({ data, isLive }) => {
       intensity: pausedStates.envChart ? currentDisplayData.intensity : (pausedStates.intensity ? currentDisplayData.intensity : data.intensity),
       temperature: pausedStates.envChart ? currentDisplayData.temperature : (pausedStates.temperature ? currentDisplayData.temperature : data.temperature),
       servoAngle: pausedStates.servoAngle ? currentDisplayData.servoAngle : data.servoAngle,
+      motionDetected: pausedStates.motion ? currentDisplayData.motionDetected : data.motionDetected,
       efficiency: pausedStates.efficiency ? currentDisplayData.efficiency : data.efficiency,
       battery: pausedStates.battery ? currentDisplayData.battery : data.battery,
       gps: pausedStates.map ? currentDisplayData.gps : data.gps,
     }));
-  }, [data]);
+  }, [data, pausedStates]);
 
   const togglePause = (id: string) => {
     setPausedStates(prev => ({ ...prev, [id]: !prev[id] }));
@@ -47,8 +48,9 @@ const DashboardView: React.FC<DashboardViewProps> = ({ data, isLive }) => {
           </div>
         </div>
       )}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
-        {/* Data Cards */}
+      
+      {/* Data Cards Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 md:gap-6 mb-4 md:mb-6">
         <PausableWrapper isPaused={!!pausedStates.energy} onTogglePause={() => togglePause('energy')} isLive={isLive}>
           <DataCard title="Energy Output" value={displayData.energy} unit="kWh" icon={<ZapIcon />} colorClass="text-yellow-400"/>
         </PausableWrapper>
@@ -61,7 +63,19 @@ const DashboardView: React.FC<DashboardViewProps> = ({ data, isLive }) => {
         <PausableWrapper isPaused={!!pausedStates.servoAngle} onTogglePause={() => togglePause('servoAngle')} isLive={isLive}>
           <DataCard title="Servo Angle" value={displayData.servoAngle} unit="°" icon={<AngleIcon />} colorClass="text-purple-400"/>
         </PausableWrapper>
-
+        <PausableWrapper isPaused={!!pausedStates.motion} onTogglePause={() => togglePause('motion')} isLive={isLive}>
+          <DataCard 
+            title="Motion Sensor" 
+            value={displayData.motionDetected ? 'Detected' : 'Clear'} 
+            unit="" 
+            icon={<MotionSensorIcon />} 
+            colorClass={displayData.motionDetected ? 'text-red-400' : 'text-green-400'}
+          />
+        </PausableWrapper>
+      </div>
+      
+      {/* Main Content Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
         {/* Gauges */}
         <div className="md:col-span-1 lg:col-span-2">
           <PausableWrapper isPaused={!!pausedStates.efficiency} onTogglePause={() => togglePause('efficiency')} isLive={isLive}>
