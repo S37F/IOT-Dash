@@ -1,3 +1,4 @@
+
 import React from 'react';
 
 export const LogoIcon: React.FC = () => (
@@ -53,6 +54,10 @@ export const MotionSensorIcon: React.FC = () => (
 
 export const MapPinIcon: React.FC = () => (
     <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+);
+
+export const SatelliteIcon: React.FC = () => (
+    <svg className="w-16 h-16 text-cyan-400 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 18a6 6 0 01-6-6h12a6 6 0 01-6 6zM12 12V3m0 0l-3 3m3-3l3 3m-3 9v3m-4 0h8"></path></svg>
 );
 
 export const BatteryFullIcon: React.FC = () => <svg className="w-full h-full" viewBox="0 0 24 24" fill="currentColor"><path d="M17 5H7a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2zM9 9h6v6H9V9z" /><path d="M19 9h2v6h-2z" /></svg>
