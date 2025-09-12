@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import Header from './components/Header';
 import Sidebar from './components/Sidebar';
@@ -9,7 +10,7 @@ import type { ViewType } from './types';
 const App: React.FC = () => {
   const [currentView, setCurrentView] = useState<ViewType>('dashboard');
   const [isLive, setIsLive] = useState(true);
-  const { latestData, historicalData } = useSolarData(isLive);
+  const { latestData, historicalData, isLoading, isDataAvailable } = useSolarData(isLive);
 
   return (
     <div className="flex h-screen bg-slate-900 text-gray-200 font-sans">
@@ -17,8 +18,13 @@ const App: React.FC = () => {
       <div className="flex-1 flex flex-col overflow-hidden">
         <Header isLive={isLive} setIsLive={setIsLive} />
         <main className="flex-1 overflow-x-hidden overflow-y-auto bg-slate-800 p-4 md:p-6 lg:p-8">
-          {currentView === 'dashboard' && latestData ? (
-            <DashboardView data={latestData} isLive={isLive} />
+          {currentView === 'dashboard' ? (
+            <DashboardView 
+              data={latestData} 
+              isLive={isLive} 
+              isLoading={isLoading} 
+              isDataAvailable={isDataAvailable} 
+            />
           ) : (
             <AnalyticsView data={historicalData} />
           )}
