@@ -3,6 +3,22 @@
 // Your Firebase Realtime Database URL
 const FIREBASE_URL = 'https://dashboard-s37f-default-rtdb.firebaseio.com/.json';
 
+// --- DATA SIMULATION DISABLED ---
+// This script's purpose is to send random, simulated data to your Firebase
+// database so the dashboard has live information to display.
+//
+// As requested, this simulation has been disabled. The dashboard will now
+// only show data that is sent from your actual hardware device.
+//
+// To re-enable this simulation for testing, simply uncomment the large
+// "setInterval" block of code below.
+// ------------------------------------
+console.log("Data simulation in 'send_data.js' is currently DISABLED.");
+console.log("Connect your hardware to see real-time data on the dashboard.");
+
+
+// UNCOMMENT THE BLOCK BELOW TO RE-ENABLE RANDOM DATA SIMULATION
+/*
 // Initial GPS coordinates (London)
 let lat = 51.5074;
 let lng = -0.1278;
@@ -63,3 +79,4 @@ setInterval(async () => {
   }
 
 }, 2000); // The interval is 2000 milliseconds (2 seconds)
+*/
