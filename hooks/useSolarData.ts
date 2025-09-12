@@ -45,6 +45,8 @@ const initialData: SolarData = {
 export const useSolarData = (isLive: boolean) => {
   const [latestData, setLatestData] = useState<SolarData>(initialData);
   const [historicalData, setHistoricalData] = useState<SolarData[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isDataAvailable, setIsDataAvailable] = useState<boolean>(false);
   const intervalIdRef = useRef<number | null>(null);
 
   const fetchLatestData = useCallback(async () => {
@@ -55,6 +57,7 @@ export const useSolarData = (isLive: boolean) => {
       }
       const data = await response.json();
       if (data) {
+        setIsDataAvailable(true);
         const mappedData: SolarData = {
           timestamp: new Date().toISOString(),
           energy: data.energy ?? 0,
@@ -67,15 +70,24 @@ export const useSolarData = (isLive: boolean) => {
           gps: data.gps ?? { lat: 51.5074, lng: -0.1278 },
         };
         setLatestData(mappedData);
+      } else {
+        setIsDataAvailable(false);
       }
     } catch (error) {
       console.error("Failed to fetch latest solar data:", error);
+      setIsDataAvailable(false);
     }
   }, []);
 
   useEffect(() => {
+    const initialFetch = async () => {
+      await fetchLatestData();
+      setIsLoading(false);
+    };
+    
     setHistoricalData(generateHistoricalData());
-    fetchLatestData();
+    initialFetch();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fetchLatestData]);
 
   useEffect(() => {
@@ -99,5 +111,5 @@ export const useSolarData = (isLive: boolean) => {
     };
   }, [isLive, fetchLatestData]);
 
-  return { latestData, historicalData };
+  return { latestData, historicalData, isLoading, isDataAvailable };
 };
