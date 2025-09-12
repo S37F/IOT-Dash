@@ -42,41 +42,12 @@ const initialData: SolarData = {
   gps: { lat: 51.5074, lng: -0.1278 },
 };
 
-const generateRandomData = (previousData: SolarData): SolarData => {
-    const energy = parseFloat((Math.random() * 15 + 12).toFixed(1));
-    const efficiency = Math.floor(Math.random() * 16) + 80; // Range: 80-95
-    const battery = Math.floor(Math.random() * 101);      // Range: 0-100
-    const intensity = Math.floor(Math.random() * 901) + 100; // Range: 100-1000
-    const temperature = Math.floor(Math.random() * 26) + 10; // Range: 10-35
-    const servoAngle = Math.floor(Math.random() * 181); // Range 0-180
-    const motionDetected = Math.random() > 0.8; // 20% chance of being detected
-  
-    // Slightly randomize GPS coordinates to simulate movement
-    const lat = previousData.gps.lat + (Math.random() - 0.5) / 2500;
-    const lng = previousData.gps.lng + (Math.random() - 0.5) / 2500;
-  
-    return {
-      timestamp: new Date().toISOString(),
-      energy: energy,
-      efficiency: efficiency,
-      battery: battery,
-      intensity: intensity,
-      temperature: temperature,
-      servoAngle: servoAngle,
-      motionDetected: motionDetected,
-      gps: { 
-        lat: parseFloat(lat.toFixed(4)), 
-        lng: parseFloat(lng.toFixed(4)) 
-      }
-    };
-  };
-
 export const useSolarData = (isLive: boolean) => {
   const [latestData, setLatestData] = useState<SolarData>(initialData);
   const [historicalData, setHistoricalData] = useState<SolarData[]>([]);
   const intervalIdRef = useRef<number | null>(null);
 
-  const fetchInitialData = useCallback(async () => {
+  const fetchLatestData = useCallback(async () => {
     try {
       const response = await fetch('https://dashboard-s37f-default-rtdb.firebaseio.com/.json');
       if (!response.ok) {
@@ -98,20 +69,20 @@ export const useSolarData = (isLive: boolean) => {
         setLatestData(mappedData);
       }
     } catch (error) {
-      console.error("Failed to fetch initial solar data:", error);
+      console.error("Failed to fetch latest solar data:", error);
     }
   }, []);
 
   useEffect(() => {
     setHistoricalData(generateHistoricalData());
-    fetchInitialData();
-  }, [fetchInitialData]);
+    fetchLatestData();
+  }, [fetchLatestData]);
 
   useEffect(() => {
     if (isLive) {
       if (intervalIdRef.current === null) {
         intervalIdRef.current = window.setInterval(() => {
-            setLatestData(prevData => generateRandomData(prevData));
+            fetchLatestData();
         }, 2000);
       }
     } else {
@@ -126,7 +97,7 @@ export const useSolarData = (isLive: boolean) => {
         clearInterval(intervalIdRef.current);
       }
     };
-  }, [isLive]);
+  }, [isLive, fetchLatestData]);
 
   return { latestData, historicalData };
 };
