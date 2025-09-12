@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import type { SolarData } from '../types';
 import DataCard from '../components/DataCard';
@@ -6,14 +7,16 @@ import BatteryGauge from '../components/BatteryGauge';
 import RealtimeChart from '../components/RealtimeChart';
 import MapView from '../components/MapView';
 import PausableWrapper from '../components/PausableWrapper';
-import { SunIcon, ZapIcon, ThermometerIcon, AngleIcon, MotionSensorIcon } from '../components/icons/Icons';
+import { SunIcon, ZapIcon, ThermometerIcon, AngleIcon, MotionSensorIcon, SatelliteIcon } from '../components/icons/Icons';
 
 interface DashboardViewProps {
   data: SolarData;
   isLive: boolean;
+  isLoading: boolean;
+  isDataAvailable: boolean;
 }
 
-const DashboardView: React.FC<DashboardViewProps> = ({ data, isLive }) => {
+const DashboardView: React.FC<DashboardViewProps> = ({ data, isLive, isLoading, isDataAvailable }) => {
   const [pausedStates, setPausedStates] = useState<Record<string, boolean>>({});
   const [displayData, setDisplayData] = useState<SolarData>(data);
 
@@ -40,6 +43,26 @@ const DashboardView: React.FC<DashboardViewProps> = ({ data, isLive }) => {
 
   return (
     <div className="relative">
+      {isLoading && (
+        <div className="absolute inset-0 bg-slate-800/80 backdrop-blur-sm flex items-center justify-center z-40 rounded-lg">
+          <div className="text-center p-8">
+            <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-cyan-400 mx-auto"></div>
+            <h2 className="text-2xl font-bold text-slate-200 mt-4">Connecting to Database...</h2>
+          </div>
+        </div>
+      )}
+
+      {!isLoading && !isDataAvailable && isLive && (
+        <div className="absolute inset-0 bg-slate-800/80 backdrop-blur-sm flex items-center justify-center z-30 rounded-lg">
+          <div className="text-center p-8 bg-slate-900 rounded-xl shadow-lg border border-slate-700 max-w-md">
+            <SatelliteIcon />
+            <h2 className="text-2xl font-bold text-cyan-400 my-2">Awaiting Data</h2>
+            <p className="text-slate-300">Dashboard is connected. Waiting for the first signal from the hardware.</p>
+            <p className="text-xs text-slate-500 mt-4">Tip: You can manually import JSON data into Firebase to test the dashboard.</p>
+          </div>
+        </div>
+      )}
+      
        {!isLive && (
         <div className="absolute inset-0 bg-slate-800/80 backdrop-blur-sm flex items-center justify-center z-30 rounded-lg">
           <div className="text-center p-8 bg-slate-900 rounded-xl shadow-lg border border-slate-700">
