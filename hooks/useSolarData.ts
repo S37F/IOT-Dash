@@ -2,34 +2,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import type { SolarData } from '../types';
 
-const generateHistoricalData = (): SolarData[] => {
-  const data: SolarData[] = [];
-  const now = new Date();
-  for (let i = 365 * 24; i > 0; i--) { // a year of hourly data
-    const timestamp = new Date(now.getTime() - i * 60 * 60 * 1000);
-    const hour = timestamp.getHours();
-    
-    // Simulate day/night cycle for energy, intensity
-    const isDay = hour > 6 && hour < 20;
-    const intensity = isDay ? Math.random() * 800 + 200 : Math.random() * 50;
-    const energy = isDay ? parseFloat((Math.random() * 15 + 10 + Math.sin(hour/24 * Math.PI) * 10).toFixed(1)) : 0;
-    const servoAngle = isDay ? Math.round(90 + 75 * Math.sin(((hour - 6) / 14) * Math.PI)) : 0;
-    
-    data.push({
-      timestamp: timestamp.toISOString(),
-      energy: energy,
-      efficiency: parseFloat((Math.random() * 15 + 80).toFixed(0)),
-      battery: parseFloat((Math.random() * 40 + 60).toFixed(0)), // Assume mostly charged
-      intensity: parseFloat(intensity.toFixed(0)),
-      temperature: parseFloat((Math.random() * 15 + 15).toFixed(0)),
-      servoAngle: servoAngle,
-      motionDetected: Math.random() < 0.05, // 5% chance of motion detection in the past
-      gps: { lat: 51.5074, lng: -0.1278 }, // Static London location
-    });
-  }
-  return data;
-};
-
 const initialData: SolarData = {
   timestamp: new Date().toISOString(),
   energy: 0,
@@ -48,6 +20,7 @@ export const useSolarData = (isLive: boolean) => {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isDataAvailable, setIsDataAvailable] = useState<boolean>(false);
   const intervalIdRef = useRef<number | null>(null);
+  const lastHistoryUpdate = useRef<number>(0);
 
   const fetchLatestData = useCallback(async () => {
     try {
@@ -70,6 +43,15 @@ export const useSolarData = (isLive: boolean) => {
           gps: data.gps ?? { lat: 51.5074, lng: -0.1278 },
         };
         setLatestData(mappedData);
+        
+        // To build up historical data for analytics, we add a data point
+        // periodically. Throttled to once per minute to avoid excessive memory usage.
+        const now = Date.now();
+        if (now - lastHistoryUpdate.current > 60 * 1000) {
+            setHistoricalData(prev => [...prev, mappedData]);
+            lastHistoryUpdate.current = now;
+        }
+
       } else {
         setIsDataAvailable(false);
       }
@@ -85,7 +67,7 @@ export const useSolarData = (isLive: boolean) => {
       setIsLoading(false);
     };
     
-    setHistoricalData(generateHistoricalData());
+    // Historical data is now collected in real-time instead of being generated.
     initialFetch();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fetchLatestData]);
