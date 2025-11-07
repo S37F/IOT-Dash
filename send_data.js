@@ -1,7 +1,7 @@
 // File: send_data.js
 
 // Your Firebase Realtime Database URL
-const FIREBASE_URL = 'https://dashboard-s37f-default-rtdb.firebaseio.com/.json';
+// const FIREBASE_URL = 'https://dashboard-s37f-default-rtdb.firebaseio.com/.json';
 
 // --- DATA SIMULATION DISABLED ---
 // This script's purpose is to send random, simulated data to your Firebase
