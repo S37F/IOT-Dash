@@ -6,49 +6,66 @@ interface AnalyticsViewProps {
   data: SolarData[];
 }
 
-type Timeframe = 'Weekly' | 'Monthly' | 'Yearly';
+const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
 const AnalyticsView: React.FC<AnalyticsViewProps> = ({ data }) => {
-  const [timeframe, setTimeframe] = useState<Timeframe>('Weekly');
+  const todayIndex = useMemo(() => new Date().getDay(), []);
+  const [selectedDay, setSelectedDay] = useState<string>(dayNames[todayIndex]);
+
+  const availableDays = useMemo(() => dayNames.slice(0, todayIndex + 1), [todayIndex]);
 
   const filteredData = useMemo(() => {
     if (!data) return [];
-    const now = new Date();
-    if (timeframe === 'Weekly') {
-      const oneWeekAgo = new Date(now.setDate(now.getDate() - 7));
-      return data.filter(d => new Date(d.timestamp) > oneWeekAgo);
-    }
-    if (timeframe === 'Monthly') {
-      const oneMonthAgo = new Date(now.setMonth(now.getMonth() - 1));
-      return data.filter(d => new Date(d.timestamp) > oneMonthAgo);
-    }
-    // Yearly - use all data
-    return data;
-  }, [data, timeframe]);
-  
-  const timeframes: Timeframe[] = ['Weekly', 'Monthly', 'Yearly'];
+    
+    const dayIndex = dayNames.indexOf(selectedDay);
+    if (dayIndex === -1) return [];
 
+    const now = new Date();
+    // This logic correctly finds the date for the selected day in the current week
+    const targetDate = new Date(now);
+    targetDate.setDate(now.getDate() - (todayIndex - dayIndex));
+
+    const startOfDay = new Date(targetDate);
+    startOfDay.setHours(0, 0, 0, 0);
+
+    const endOfDay = new Date(targetDate);
+    endOfDay.setHours(23, 59, 59, 999);
+
+    return data.filter(d => {
+        const recordDate = new Date(d.timestamp);
+        return recordDate >= startOfDay && recordDate <= endOfDay;
+    });
+
+  }, [data, selectedDay, todayIndex]);
+  
   return (
     <div>
-        <div className="mb-6 bg-slate-900/50 p-2 rounded-lg border border-slate-700 max-w-sm">
-            <div className="flex items-center justify-center space-x-2">
-            {timeframes.map(t => (
+        <h2 className="text-2xl font-bold text-slate-200 mb-4">Weekly Performance</h2>
+        <div className="mb-6 bg-slate-900/50 p-2 rounded-lg border border-slate-700 max-w-full lg:max-w-xl">
+            <div className="flex items-center justify-center flex-wrap gap-2">
+            {availableDays.map(day => (
                 <button
-                key={t}
-                onClick={() => setTimeframe(t)}
-                className={`px-4 py-2 text-sm font-semibold rounded-md transition-colors duration-200 w-full ${
-                    timeframe === t
+                key={day}
+                onClick={() => setSelectedDay(day)}
+                className={`px-4 py-2 text-sm font-semibold rounded-md transition-colors duration-200 flex-grow text-center ${
+                    selectedDay === day
                     ? 'bg-cyan-500 text-white shadow-md'
                     : 'text-slate-300 hover:bg-slate-700'
                 }`}
                 >
-                {t}
+                {day}
                 </button>
             ))}
             </div>
         </div>
 
-        <AnalyticsCharts data={filteredData} timeframe={timeframe} />
+        {filteredData.length > 0 ? (
+            <AnalyticsCharts data={filteredData} timeframe={selectedDay} />
+        ) : (
+            <div className="text-center py-10 bg-slate-900/50 rounded-lg border border-slate-700">
+                <p className="text-slate-400">No data available for {selectedDay}.</p>
+            </div>
+        )}
     </div>
   );
 };
