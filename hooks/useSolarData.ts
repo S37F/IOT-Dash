@@ -17,17 +17,19 @@ const simulateNextDataPoint = (
 ): SolarData => {
   const timeOfDay = timestamp.getHours() + timestamp.getMinutes() / 60;
   
-  // 1. Simulate Light Intensity based on weather and time
-  let baseIntensity = Math.max(0, 1100 * Math.sin((timeOfDay - 6) * (Math.PI / 12)));
-  if (timeOfDay < 6 || timeOfDay > 18) baseIntensity = 0;
+  // 1. Simulate LDR Value (0-4095 ADC range) based on weather and time
+  let baseLDR = Math.max(0, 4095 * Math.sin((timeOfDay - 6) * (Math.PI / 12)));
+  if (timeOfDay < 6 || timeOfDay > 18) baseLDR = 0;
 
   switch (weather) {
-    case 'Clear Sunny': baseIntensity *= 0.98; break;
-    case 'Partly Cloudy': baseIntensity *= (0.6 + Math.random() * 0.2); break;
-    case 'Mixed Cloud': baseIntensity *= (Math.random() > 0.5 ? 0.9 : 0.5); break;
-    case 'Overcast & Rainy': baseIntensity *= 0.3; break;
+    case 'Clear Sunny': baseLDR *= 0.98; break;
+    case 'Partly Cloudy': baseLDR *= (0.6 + Math.random() * 0.2); break;
+    case 'Mixed Cloud': baseLDR *= (Math.random() > 0.5 ? 0.9 : 0.5); break;
+    case 'Overcast & Rainy': baseLDR *= 0.3; break;
   }
-  const intensity = Math.floor(baseIntensity + Math.random() * 15);
+  const ldrValue = Math.floor(baseLDR + Math.random() * 50);
+  const intensity = ldrValue; // Same value for compatibility
+  const isNight = ldrValue < 3000; // LDR threshold from ESP32 code
 
   // 2. Simulate Temperature
   const tempProfiles = { 'Clear Sunny': [18, 32], 'Partly Cloudy': [15, 26], 'Mixed Cloud': [16, 28], 'Overcast & Rainy': [12, 18] };
@@ -45,23 +47,28 @@ const simulateNextDataPoint = (
   if (specialConditions.isWednesdayEvening) baseEfficiency = Math.min(99, baseEfficiency + 2); // Special efficiency boost
   const efficiency = Math.max(78, Math.min(99, parseFloat(baseEfficiency.toFixed(1))));
 
-  // 4. Calculate Power Generated
+  // 4. Calculate Power Generated (based on LDR normalized to 0-1000 lux scale)
   const panelMaxPowerW = 100; // 100W panel
-  const powerGeneratedW = (intensity / 1000) * panelMaxPowerW * (efficiency / 100);
+  const normalizedIntensity = (intensity / 4095) * 1000; // Convert ADC to lux equivalent
+  const powerGeneratedW = (normalizedIntensity / 1000) * panelMaxPowerW * (efficiency / 100);
   const energy = parseFloat((powerGeneratedW / 4).toFixed(1)); // kWh in a 15 min block
 
-  // 5. Simulate Servo Angle (sun tracking)
-  let servoAngle = 45;
-  if (timeOfDay > 6.5 && timeOfDay < 18) {
-    servoAngle = Math.round(170 - 160 * ((timeOfDay - 6.5) / 11.5)); // East (170) to West (10)
-  } else {
-    servoAngle = 90; // Rest position
+  // 5. Simulate Servo Angle (sun tracking during day, center at night)
+  let servoAngle = 90;
+  if (!isNight && timeOfDay > 6.5 && timeOfDay < 18) {
+    servoAngle = Math.round(ldrValue / 4095 * 180); // Map LDR to servo angle (0-180)
   }
   if (specialConditions.isWednesdayEvening) servoAngle = 25; // Pointing West
 
-  // 6. Stateful Battery Simulation
+  // 6. Simulate Distance (ultrasonic sensor)
+  const distance = parseFloat((Math.random() * 300).toFixed(1)); // 0-300 cm random
+  const motionDetected = distance <= 150; // Motion if distance <= 150cm
+
+  // 7. LED Status (ON only at night when motion detected)
+  const ledStatus = isNight && motionDetected;
+
+  // 8. Stateful Battery Simulation
   const batteryCapacityWh = 74; // 10A * 2-cell (3.7V * 2) = 74Wh
-  // System consumes more power when actively tracking the sun
   const systemConsumptionW = specialConditions.isWednesdayMorning ? 15 : 5;
   const netPowerW = powerGeneratedW - systemConsumptionW;
   
@@ -73,17 +80,50 @@ const simulateNextDataPoint = (
 
   return {
     timestamp: timestamp.toISOString(),
+    ldrValue,
+    intensity,
+    servoAngle,
+    motionDetected,
+    distance,
+    ledStatus,
+    isNight,
     energy,
     efficiency,
     battery: parseFloat(newBatteryLevel.toFixed(1)),
-    intensity,
     temperature,
-    servoAngle,
-    motionDetected: Math.random() < 0.01, // Low chance of random motion
-    gps: { lat: 51.5074 + (Math.random() - 0.5) / 1000, lng: -0.1278 + (Math.random() - 0.5) / 1000 },
   };
 };
 
+
+// LocalStorage key for historical data
+const STORAGE_KEY = 'iot_dashboard_history';
+const MAX_HISTORY_DAYS = 7; // Keep last 7 days of data
+
+// Save historical data to localStorage
+const saveHistoryToStorage = (data: SolarData[]) => {
+  try {
+    // Filter data to keep only last 7 days
+    const now = Date.now();
+    const sevenDaysAgo = now - (MAX_HISTORY_DAYS * 24 * 60 * 60 * 1000);
+    const recentData = data.filter(d => new Date(d.timestamp).getTime() > sevenDaysAgo);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(recentData));
+  } catch (error) {
+    console.error('Failed to save history to localStorage:', error);
+  }
+};
+
+// Load historical data from localStorage
+const loadHistoryFromStorage = (): SolarData[] => {
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    if (stored) {
+      return JSON.parse(stored);
+    }
+  } catch (error) {
+    console.error('Failed to load history from localStorage:', error);
+  }
+  return [];
+};
 
 export const useSolarData = (isLive: boolean) => {
   const [latestData, setLatestData] = useState<SolarData | null>(null);
@@ -92,65 +132,17 @@ export const useSolarData = (isLive: boolean) => {
   const [isDataAvailable, setIsDataAvailable] = useState<boolean>(false);
   const intervalIdRef = useRef<number | null>(null);
   const lastHistoryUpdate = useRef<number>(0);
+  const lastDataUpdateTime = useRef<number>(0); // Track when data was last updated
   
   const batteryLevelRef = useRef<number>(85);
   const lastSimTimestampRef = useRef<number>(Date.now());
 
-  // Generate historical data on mount
+  // Load historical data from localStorage on mount
   useEffect(() => {
-    const history: SolarData[] = [];
-    const now = new Date();
-
-    const startOfWeek = new Date(now);
-    startOfWeek.setDate(now.getDate() - now.getDay()); // Go back to the most recent Sunday
-    startOfWeek.setHours(0, 0, 0, 0);
-
-    // Consistent weather profiles for the week
-    const weatherProfiles: ('Clear Sunny' | 'Partly Cloudy' | 'Overcast & Rainy' | 'Mixed Cloud')[] = 
-      ['Clear Sunny', 'Partly Cloudy', 'Mixed Cloud', 'Overcast & Rainy', 'Clear Sunny', 'Partly Cloudy', 'Mixed Cloud'];
-
-    let currentState: SolarData = {
-      timestamp: new Date(startOfWeek.getTime() - 1).toISOString(),
-      energy: 0, efficiency: 90, battery: 85, intensity: 0, temperature: 15,
-      gps: { lat: 51.5074, lng: -0.1278 }, servoAngle: 90, motionDetected: false,
-    };
-
-    for (let d = new Date(startOfWeek); d <= now; d.setMinutes(d.getMinutes() + 15)) {
-      const currentDay = d.getDay(); // 0=Sun, 3=Wed
-      const currentHour = d.getHours();
-      const currentMinute = d.getMinutes();
-
-      // Wednesday: Simulate device being offline between 9am and 5:30pm
-      if (currentDay === 3) {
-        const time = currentHour + currentMinute / 60;
-        if (time >= 9 && time < 17.5) {
-          // To maintain battery drain during offline, simulate a single point of consumption
-          if(history[history.length-1].timestamp.startsWith(d.toISOString().split('T')[0])) {
-             const lastRecordTime = new Date(history[history.length - 1].timestamp).getHours() + new Date(history[history.length - 1].timestamp).getMinutes()/60;
-             if(lastRecordTime < 9) { // only add this drain point once
-                const offlineDrainTime = new Date(d);
-                offlineDrainTime.setHours(9,0,0,0);
-                currentState.timestamp = offlineDrainTime.toISOString();
-                currentState.battery = Math.max(0, currentState.battery - 15); // Simulate base drain over ~8 hours
-             }
-          }
-          continue; // Skip data generation for this interval
-        }
-      }
-
-      const specialConditions = {
-        isWednesdayMorning: currentDay === 3 && currentHour >= 8 && currentHour < 9,
-        isWednesdayEvening: currentDay === 3 && (currentHour === 17 && currentMinute >= 30 || (currentHour >= 18 && currentHour < 19)),
-      };
-
-      currentState = simulateNextDataPoint(currentState, new Date(d), weatherProfiles[currentDay], specialConditions);
-      history.push(currentState);
-    }
-
-    if (history.length > 0) {
-      setHistoricalData(history);
-      const lastPoint = history[history.length - 1];
-      setLatestData(lastPoint);
+    const storedHistory = loadHistoryFromStorage();
+    if (storedHistory.length > 0) {
+      setHistoricalData(storedHistory);
+      const lastPoint = storedHistory[storedHistory.length - 1];
       batteryLevelRef.current = lastPoint.battery;
       lastHistoryUpdate.current = new Date(lastPoint.timestamp).getTime();
     }
@@ -165,31 +157,50 @@ export const useSolarData = (isLive: boolean) => {
       const data = await response.json();
 
       if (data) {
+        // Check if Firebase data has a timestamp field
+        const firebaseTimestamp = data.timestamp ? new Date(data.timestamp).getTime() : 0;
+        const currentTime = Date.now();
+        const dataAge = currentTime - firebaseTimestamp;
+        
+        // Data is considered "live" if it's less than 10 seconds old
+        // If there's no timestamp or data is stale, mark as not available
+        const isLiveData = firebaseTimestamp > 0 && dataAge < 10000; // 10 seconds
+        
+        if (!isLiveData) {
+          setIsDataAvailable(false);
+          return;
+        }
+        
+        // Update the last data update time
+        lastDataUpdateTime.current = currentTime;
         setIsDataAvailable(true);
 
-        // Authentic data points from hardware
-        const intensity: number = data.intensity ?? 0;
-        const servoAngle: number = data.servoAngle ?? 45;
+        // Real hardware values from ESP32
+        const ldrValue: number = data.ldrValue ?? data.intensity ?? 0;
+        const intensity: number = data.intensity ?? data.ldrValue ?? 0;
+        const servoAngle: number = data.servoAngle ?? 90;
         const motionDetected: boolean = data.motionDetected ?? false;
-        const gps = data.gps ?? { lat: 51.5074, lng: -0.1278 };
+        const distance: number = data.distance ?? 300;
+        const ledStatus: boolean = data.ledStatus ?? false;
+        const isNight: boolean = data.isNight ?? (ldrValue < 3000);
 
-        // Simulate other values based on authentic intensity
+        // Simulate other values based on authentic LDR/intensity
         const now = new Date();
         const timeOfDay = now.getHours() + now.getMinutes() / 60;
         const minTemp = 10, maxTemp = 28;
         const tempAmplitude = (maxTemp - minTemp) / 2;
         const tempOffset = minTemp + tempAmplitude;
         const baseTemperature = tempOffset + tempAmplitude * Math.sin((timeOfDay - 8) * (Math.PI / 12));
-        const simulatedTemperature = parseFloat((baseTemperature + (Math.random() - 0.5) * 1.5 + (intensity / 1000) * 2).toFixed(1));
+        const simulatedTemperature = parseFloat((baseTemperature + (Math.random() - 0.5) * 1.5 + (intensity / 4095) * 2).toFixed(1));
 
         let baseEfficiency = 97.5;
         if (simulatedTemperature > 25) baseEfficiency -= (simulatedTemperature - 25) * 0.45;
-        // FIX: Use simulatedTemperature variable which is defined in this scope.
         if (simulatedTemperature < 20) baseEfficiency += (20 - simulatedTemperature) * 0.1;
         const simulatedEfficiency = Math.max(80, Math.min(99, parseFloat(baseEfficiency.toFixed(1))));
 
         const panelMaxPowerW = 100;
-        const powerGeneratedW = (intensity / 1000) * panelMaxPowerW * (simulatedEfficiency / 100);
+        const normalizedIntensity = (intensity / 4095) * 1000; // Convert ADC to lux
+        const powerGeneratedW = (normalizedIntensity / 1000) * panelMaxPowerW * (simulatedEfficiency / 100);
         const simulatedEnergyValue = parseFloat((powerGeneratedW / 4).toFixed(1));
 
         const batteryCapacityWh = 74;
@@ -208,16 +219,29 @@ export const useSolarData = (isLive: boolean) => {
 
         const mappedData: SolarData = {
           timestamp: new Date().toISOString(),
-          energy: simulatedEnergyValue, efficiency: simulatedEfficiency, battery: simulatedBattery,
-          temperature: simulatedTemperature, intensity: intensity, servoAngle: servoAngle,
-          motionDetected: motionDetected, gps: gps,
+          ldrValue,
+          intensity,
+          servoAngle,
+          motionDetected,
+          distance,
+          ledStatus,
+          isNight,
+          energy: simulatedEnergyValue,
+          efficiency: simulatedEfficiency,
+          battery: simulatedBattery,
+          temperature: simulatedTemperature,
         };
         
         setLatestData(mappedData);
         
+        // Save to historical data every minute and persist to localStorage
         const currentTimestamp = Date.now();
         if (currentTimestamp - lastHistoryUpdate.current > 60 * 1000) {
-            setHistoricalData(prev => [...prev, mappedData]);
+            setHistoricalData(prev => {
+              const updated = [...prev, mappedData];
+              saveHistoryToStorage(updated); // Persist to localStorage
+              return updated;
+            });
             lastHistoryUpdate.current = currentTimestamp;
         }
 
@@ -234,7 +258,7 @@ export const useSolarData = (isLive: boolean) => {
     if (isLive) {
       if (intervalIdRef.current === null) {
         lastSimTimestampRef.current = Date.now();
-        fetchLatestData();
+        fetchLatestData(); // Fetch immediately
         intervalIdRef.current = window.setInterval(fetchLatestData, 2000);
       }
     } else {
@@ -250,9 +274,18 @@ export const useSolarData = (isLive: boolean) => {
   }, [isLive, fetchLatestData]);
 
   const defaultData: SolarData = {
-    timestamp: new Date().toISOString(), energy: 0, efficiency: 0, battery: 0,
-    intensity: 0, temperature: 0, servoAngle: 45, motionDetected: false,
-    gps: { lat: 51.5074, lng: -0.1278 },
+    timestamp: new Date().toISOString(),
+    ldrValue: 0,
+    intensity: 0,
+    servoAngle: 0,
+    motionDetected: false,
+    distance: 0,
+    ledStatus: false,
+    isNight: false,
+    energy: 0,
+    efficiency: 0,
+    battery: 0,
+    temperature: 0,
   };
 
   return { latestData: latestData ?? defaultData, historicalData, isLoading, isDataAvailable };
