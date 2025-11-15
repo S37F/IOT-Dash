@@ -105,3 +105,9 @@ export const LdrIcon: React.FC = () => (
       <circle cx="12" cy="12" r="1" fill="currentColor"/>
     </svg>
 );
+
+export const HumidityIcon: React.FC = () => (
+    <svg className="w-8 h-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/>
+    </svg>
+);
