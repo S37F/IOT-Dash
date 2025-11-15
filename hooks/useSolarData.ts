@@ -183,19 +183,14 @@ export const useSolarData = (isLive: boolean) => {
         const distance: number = data.distance ?? 300;
         const ledStatus: boolean = data.ledStatus ?? false;
         const isNight: boolean = data.isNight ?? (ldrValue < 3000);
+        const realTemperature: number = data.temperature ?? 25; // Real DHT11 temperature
+        const realHumidity: number = data.humidity ?? 0; // Real DHT11 humidity
 
-        // Simulate other values based on authentic LDR/intensity
-        const now = new Date();
-        const timeOfDay = now.getHours() + now.getMinutes() / 60;
-        const minTemp = 10, maxTemp = 28;
-        const tempAmplitude = (maxTemp - minTemp) / 2;
-        const tempOffset = minTemp + tempAmplitude;
-        const baseTemperature = tempOffset + tempAmplitude * Math.sin((timeOfDay - 8) * (Math.PI / 12));
-        const simulatedTemperature = parseFloat((baseTemperature + (Math.random() - 0.5) * 1.5 + (intensity / 4095) * 2).toFixed(1));
-
+        // Calculate efficiency based on REAL temperature
+        // Calculate efficiency based on REAL temperature
         let baseEfficiency = 97.5;
-        if (simulatedTemperature > 25) baseEfficiency -= (simulatedTemperature - 25) * 0.45;
-        if (simulatedTemperature < 20) baseEfficiency += (20 - simulatedTemperature) * 0.1;
+        if (realTemperature > 25) baseEfficiency -= (realTemperature - 25) * 0.45;
+        if (realTemperature < 20) baseEfficiency += (20 - realTemperature) * 0.1;
         const simulatedEfficiency = Math.max(80, Math.min(99, parseFloat(baseEfficiency.toFixed(1))));
 
         const panelMaxPowerW = 100;
@@ -229,8 +224,8 @@ export const useSolarData = (isLive: boolean) => {
           energy: simulatedEnergyValue,
           efficiency: simulatedEfficiency,
           battery: simulatedBattery,
-          temperature: simulatedTemperature,
-          humidity: firebaseData.humidity || 0, // Real DHT11 humidity
+          temperature: realTemperature, // Real DHT11 temperature
+          humidity: realHumidity, // Real DHT11 humidity
         };
         
         setLatestData(mappedData);
