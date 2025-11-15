@@ -230,6 +230,7 @@ export const useSolarData = (isLive: boolean) => {
           efficiency: simulatedEfficiency,
           battery: simulatedBattery,
           temperature: simulatedTemperature,
+          humidity: firebaseData.humidity || 0, // Real DHT11 humidity
         };
         
         setLatestData(mappedData);
