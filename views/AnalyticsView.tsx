@@ -40,7 +40,8 @@ const AnalyticsView: React.FC<AnalyticsViewProps> = ({ data }) => {
   
   return (
     <div>
-        <h2 className="text-2xl font-bold text-slate-200 mb-4">Weekly Performance</h2>
+        <h2 className="text-2xl font-bold text-slate-200 mb-2">Historical Analytics</h2>
+        <p className="text-sm text-slate-400 mb-4">Real data from your ESP32 device, updated every minute and stored for 7 days</p>
         <div className="mb-6 bg-slate-900/50 p-2 rounded-lg border border-slate-700 max-w-full lg:max-w-xl">
             <div className="flex items-center justify-center flex-wrap gap-2">
             {availableDays.map(day => (
@@ -60,10 +61,26 @@ const AnalyticsView: React.FC<AnalyticsViewProps> = ({ data }) => {
         </div>
 
         {filteredData.length > 0 ? (
-            <AnalyticsCharts data={filteredData} timeframe={selectedDay} />
+            <>
+              <div className="mb-4 bg-slate-900/50 p-3 rounded-lg border border-slate-700">
+                <p className="text-sm text-slate-300">
+                  📊 Showing <span className="font-bold text-cyan-400">{filteredData.length} data points</span> for {selectedDay}
+                </p>
+              </div>
+              <AnalyticsCharts data={filteredData} timeframe={selectedDay} />
+            </>
         ) : (
             <div className="text-center py-10 bg-slate-900/50 rounded-lg border border-slate-700">
-                <p className="text-slate-400">No data available for {selectedDay}.</p>
+                <div className="max-w-md mx-auto">
+                  <svg className="w-16 h-16 text-slate-600 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                  </svg>
+                  <p className="text-slate-400 font-semibold mb-2">No data available for {selectedDay}</p>
+                  <p className="text-sm text-slate-500">
+                    Data is collected from your ESP32 device every 2 seconds and saved to history every minute.
+                    Start your device to begin collecting analytics data.
+                  </p>
+                </div>
             </div>
         )}
     </div>
