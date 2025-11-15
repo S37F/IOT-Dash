@@ -6,7 +6,7 @@ import Gauge from '../components/Gauge';
 import BatteryGauge from '../components/BatteryGauge';
 import RealtimeChart from '../components/RealtimeChart';
 import PausableWrapper from '../components/PausableWrapper';
-import { SunIcon, ZapIcon, ThermometerIcon, AngleIcon, MotionSensorIcon, SatelliteIcon, DistanceIcon, LedIcon, MoonIcon, LdrIcon } from '../components/icons/Icons';
+import { SunIcon, ZapIcon, ThermometerIcon, AngleIcon, MotionSensorIcon, SatelliteIcon, DistanceIcon, LedIcon, MoonIcon, LdrIcon, HumidityIcon } from '../components/icons/Icons';
 
 interface DashboardViewProps {
   data: SolarData;
@@ -35,6 +35,7 @@ const DashboardView: React.FC<DashboardViewProps> = ({ data, isLive, isLoading, 
       efficiency: pausedStates.efficiency ? currentDisplayData.efficiency : data.efficiency,
       battery: pausedStates.battery ? currentDisplayData.battery : data.battery,
       temperature: pausedStates.envChart ? currentDisplayData.temperature : (pausedStates.temperature ? currentDisplayData.temperature : data.temperature),
+      humidity: pausedStates.humidity ? currentDisplayData.humidity : data.humidity,
     }));
   }, [data, pausedStates]);
 
@@ -123,6 +124,9 @@ const DashboardView: React.FC<DashboardViewProps> = ({ data, isLive, isLoading, 
         </PausableWrapper>
         <PausableWrapper isPaused={!!pausedStates.temperature} onTogglePause={() => togglePause('temperature')} isLive={isLive}>
           <DataCard title="Temperature" value={displayData.temperature} unit="°C" icon={<ThermometerIcon />} colorClass="text-red-400"/>
+        </PausableWrapper>
+        <PausableWrapper isPaused={!!pausedStates.humidity} onTogglePause={() => togglePause('humidity')} isLive={isLive}>
+          <DataCard title="Humidity" value={displayData.humidity} unit="%" icon={<HumidityIcon />} colorClass="text-blue-400"/>
         </PausableWrapper>
       </div>
       
