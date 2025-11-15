@@ -76,3 +76,32 @@ export const PlayIcon: React.FC<{className?: string}> = ({className}) => (
         <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" />
     </svg>
 );
+
+export const DistanceIcon: React.FC = () => (
+    <svg className="w-8 h-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.48 8.48l2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.48-8.48l2.83-2.83"/>
+      <circle cx="12" cy="12" r="3"/>
+    </svg>
+);
+
+export const LedIcon: React.FC = () => (
+    <svg className="w-8 h-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="8" r="3"/>
+      <path d="M9 11v6l-2 2h10l-2-2v-6"/>
+      <line x1="9" y1="21" x2="15" y2="21"/>
+    </svg>
+);
+
+export const MoonIcon: React.FC = () => (
+    <svg className="w-8 h-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+    </svg>
+);
+
+export const LdrIcon: React.FC = () => (
+    <svg className="w-8 h-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="4" y="4" width="16" height="16" rx="2"/>
+      <path d="M9 9h6v6H9z"/>
+      <circle cx="12" cy="12" r="1" fill="currentColor"/>
+    </svg>
+);
