@@ -1,5 +1,5 @@
 {
   "name": "Dashboard",
-  "description": "A real-time dashboard by S37F to monitor solar panel data including energy output, efficiency, battery status, environmental factors, and GPS location. Connected to a live Firebase database.",
+  "description": "A real-time IoT dashboard by S37F to monitor ESP32 solar panel tracker data including LDR sensor, ultrasonic distance, LED status, servo angle, motion detection, and environmental factors. Connected to a live Firebase database.",
   "requestFramePermissions": []
 }
