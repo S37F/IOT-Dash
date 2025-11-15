@@ -5,9 +5,8 @@ import DataCard from '../components/DataCard';
 import Gauge from '../components/Gauge';
 import BatteryGauge from '../components/BatteryGauge';
 import RealtimeChart from '../components/RealtimeChart';
-import MapView from '../components/MapView';
 import PausableWrapper from '../components/PausableWrapper';
-import { SunIcon, ZapIcon, ThermometerIcon, AngleIcon, MotionSensorIcon, SatelliteIcon } from '../components/icons/Icons';
+import { SunIcon, ZapIcon, ThermometerIcon, AngleIcon, MotionSensorIcon, SatelliteIcon, DistanceIcon, LedIcon, MoonIcon, LdrIcon } from '../components/icons/Icons';
 
 interface DashboardViewProps {
   data: SolarData;
@@ -25,15 +24,17 @@ const DashboardView: React.FC<DashboardViewProps> = ({ data, isLive, isLoading, 
     // It runs whenever a new `data` prop is received.
     setDisplayData(currentDisplayData => ({
       timestamp: data.timestamp, // Always update timestamp
-      energy: pausedStates.energy ? currentDisplayData.energy : data.energy,
-      // For chart values, check the chart's pause state first, then the individual card's.
+      ldrValue: pausedStates.ldrValue ? currentDisplayData.ldrValue : data.ldrValue,
       intensity: pausedStates.envChart ? currentDisplayData.intensity : (pausedStates.intensity ? currentDisplayData.intensity : data.intensity),
-      temperature: pausedStates.envChart ? currentDisplayData.temperature : (pausedStates.temperature ? currentDisplayData.temperature : data.temperature),
       servoAngle: pausedStates.servoAngle ? currentDisplayData.servoAngle : data.servoAngle,
       motionDetected: pausedStates.motion ? currentDisplayData.motionDetected : data.motionDetected,
+      distance: pausedStates.distance ? currentDisplayData.distance : data.distance,
+      ledStatus: pausedStates.ledStatus ? currentDisplayData.ledStatus : data.ledStatus,
+      isNight: pausedStates.isNight ? currentDisplayData.isNight : data.isNight,
+      energy: pausedStates.energy ? currentDisplayData.energy : data.energy,
       efficiency: pausedStates.efficiency ? currentDisplayData.efficiency : data.efficiency,
       battery: pausedStates.battery ? currentDisplayData.battery : data.battery,
-      gps: pausedStates.map ? currentDisplayData.gps : data.gps,
+      temperature: pausedStates.envChart ? currentDisplayData.temperature : (pausedStates.temperature ? currentDisplayData.temperature : data.temperature),
     }));
   }, [data, pausedStates]);
 
@@ -52,18 +53,22 @@ const DashboardView: React.FC<DashboardViewProps> = ({ data, isLive, isLoading, 
         </div>
       )}
 
-      {!isLoading && !isDataAvailable && isLive && (
-        <div className="absolute inset-0 bg-slate-800/80 backdrop-blur-sm flex items-center justify-center z-30 rounded-lg">
+      {!isLoading && !isDataAvailable && (
+        <div className="absolute inset-0 bg-slate-800/95 backdrop-blur-md flex items-center justify-center z-30 rounded-lg">
           <div className="text-center p-8 bg-slate-900 rounded-xl shadow-lg border border-slate-700 max-w-md">
             <SatelliteIcon />
-            <h2 className="text-2xl font-bold text-cyan-400 my-2">Awaiting Data</h2>
-            <p className="text-slate-300">Dashboard is connected. Waiting for the first signal from the hardware.</p>
-            <p className="text-xs text-slate-500 mt-4">Tip: You can manually import JSON data into Firebase to test the dashboard.</p>
+            <h2 className="text-2xl font-bold text-cyan-400 my-2">Connect Your IoT Device</h2>
+            <p className="text-slate-300 mb-2">Dashboard is ready and waiting for real-time data from your ESP32.</p>
+            <p className="text-sm text-slate-500 mb-4">No simulated data will be shown. Start your device to see live metrics.</p>
+            <div className="bg-slate-800 p-3 rounded-lg border border-slate-600 text-left">
+              <p className="text-xs text-cyan-400 font-mono mb-1">Firebase URL:</p>
+              <p className="text-xs text-slate-400 font-mono break-all">dashboard-s37f-default-rtdb.firebaseio.com</p>
+            </div>
           </div>
         </div>
       )}
       
-       {!isLive && (
+       {!isLive && isDataAvailable && (
         <div className="absolute inset-0 bg-slate-800/80 backdrop-blur-sm flex items-center justify-center z-30 rounded-lg">
           <div className="text-center p-8 bg-slate-900 rounded-xl shadow-lg border border-slate-700">
             <h2 className="text-2xl font-bold text-yellow-400 mb-2">Data Paused</h2>
@@ -73,18 +78,27 @@ const DashboardView: React.FC<DashboardViewProps> = ({ data, isLive, isLoading, 
       )}
       
       {/* Data Cards Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 md:gap-6 mb-4 md:mb-6">
-        <PausableWrapper isPaused={!!pausedStates.energy} onTogglePause={() => togglePause('energy')} isLive={isLive}>
-          <DataCard title="Energy Output" value={displayData.energy} unit="kWh" icon={<ZapIcon />} colorClass="text-yellow-400"/>
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-6 mb-4 md:mb-6">
+        <PausableWrapper isPaused={!!pausedStates.ldrValue} onTogglePause={() => togglePause('ldrValue')} isLive={isLive}>
+          <DataCard title="LDR Value" value={displayData.ldrValue} unit="ADC" icon={<LdrIcon />} colorClass="text-cyan-400"/>
         </PausableWrapper>
         <PausableWrapper isPaused={!!pausedStates.intensity} onTogglePause={() => togglePause('intensity')} isLive={isLive}>
           <DataCard title="Light Intensity" value={displayData.intensity} unit="lux" icon={<SunIcon />} colorClass="text-orange-400"/>
         </PausableWrapper>
-        <PausableWrapper isPaused={!!pausedStates.temperature} onTogglePause={() => togglePause('temperature')} isLive={isLive}>
-          <DataCard title="Temperature" value={displayData.temperature} unit="°C" icon={<ThermometerIcon />} colorClass="text-red-400"/>
+        <PausableWrapper isPaused={!!pausedStates.distance} onTogglePause={() => togglePause('distance')} isLive={isLive}>
+          <DataCard title="Distance" value={displayData.distance} unit="cm" icon={<DistanceIcon />} colorClass="text-blue-400"/>
         </PausableWrapper>
         <PausableWrapper isPaused={!!pausedStates.servoAngle} onTogglePause={() => togglePause('servoAngle')} isLive={isLive}>
           <DataCard title="Servo Angle" value={displayData.servoAngle} unit="°" icon={<AngleIcon />} colorClass="text-purple-400"/>
+        </PausableWrapper>
+        <PausableWrapper isPaused={!!pausedStates.ledStatus} onTogglePause={() => togglePause('ledStatus')} isLive={isLive}>
+          <DataCard 
+            title="LED Status" 
+            value={displayData.ledStatus ? 'ON' : 'OFF'} 
+            unit="" 
+            icon={<LedIcon />} 
+            colorClass={displayData.ledStatus ? 'text-yellow-400' : 'text-gray-400'}
+          />
         </PausableWrapper>
         <PausableWrapper isPaused={!!pausedStates.motion} onTogglePause={() => togglePause('motion')} isLive={isLive}>
           <DataCard 
@@ -94,6 +108,21 @@ const DashboardView: React.FC<DashboardViewProps> = ({ data, isLive, isLoading, 
             icon={<MotionSensorIcon />} 
             colorClass={displayData.motionDetected ? 'text-red-400' : 'text-green-400'}
           />
+        </PausableWrapper>
+        <PausableWrapper isPaused={!!pausedStates.isNight} onTogglePause={() => togglePause('isNight')} isLive={isLive}>
+          <DataCard 
+            title="Mode" 
+            value={displayData.isNight ? 'Night' : 'Day'} 
+            unit="" 
+            icon={displayData.isNight ? <MoonIcon /> : <SunIcon />} 
+            colorClass={displayData.isNight ? 'text-indigo-400' : 'text-yellow-400'}
+          />
+        </PausableWrapper>
+        <PausableWrapper isPaused={!!pausedStates.energy} onTogglePause={() => togglePause('energy')} isLive={isLive}>
+          <DataCard title="Energy Output" value={displayData.energy} unit="kWh" icon={<ZapIcon />} colorClass="text-yellow-400"/>
+        </PausableWrapper>
+        <PausableWrapper isPaused={!!pausedStates.temperature} onTogglePause={() => togglePause('temperature')} isLive={isLive}>
+          <DataCard title="Temperature" value={displayData.temperature} unit="°C" icon={<ThermometerIcon />} colorClass="text-red-400"/>
         </PausableWrapper>
       </div>
       
@@ -123,13 +152,6 @@ const DashboardView: React.FC<DashboardViewProps> = ({ data, isLive, isLoading, 
               label2="Intensity (lux)" 
               color2="#fb923c"
             />
-          </PausableWrapper>
-        </div>
-
-        {/* Map */}
-        <div className="md:col-span-2 lg:col-span-4">
-          <PausableWrapper isPaused={!!pausedStates.map} onTogglePause={() => togglePause('map')} isLive={isLive}>
-            <MapView gps={displayData.gps} />
           </PausableWrapper>
         </div>
       </div>
