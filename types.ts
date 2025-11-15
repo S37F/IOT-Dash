@@ -9,11 +9,13 @@ export interface SolarData {
   distance: number;           // Ultrasonic distance in cm
   ledStatus: boolean;         // LED ON/OFF status
   isNight: boolean;           // Day/Night mode
+  // DHT11 sensor values
+  temperature: number;        // Real DHT11 temperature (°C)
+  humidity: number;           // Real DHT11 humidity (%)
   // Simulated/calculated values
   energy: number;             // Calculated energy output
   efficiency: number;         // Calculated solar efficiency
   battery: number;            // Simulated battery level
-  temperature: number;        // Simulated temperature
 }
 
 export type ViewType = 'dashboard' | 'analytics';
