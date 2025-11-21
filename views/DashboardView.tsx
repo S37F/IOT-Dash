@@ -45,39 +45,6 @@ const DashboardView: React.FC<DashboardViewProps> = ({ data, isLive, isLoading, 
 
   return (
     <div className="relative">
-      {isLoading && (
-        <div className="absolute inset-0 bg-slate-800/80 backdrop-blur-sm flex items-center justify-center z-40 rounded-lg">
-          <div className="text-center p-8">
-            <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-cyan-400 mx-auto"></div>
-            <h2 className="text-2xl font-bold text-slate-200 mt-4">Connecting to Database...</h2>
-          </div>
-        </div>
-      )}
-
-      {!isLoading && !isDataAvailable && (
-        <div className="absolute inset-0 bg-slate-800/95 backdrop-blur-md flex items-center justify-center z-30 rounded-lg">
-          <div className="text-center p-8 bg-slate-900 rounded-xl shadow-lg border border-slate-700 max-w-md">
-            <SatelliteIcon />
-            <h2 className="text-2xl font-bold text-cyan-400 my-2">Connect Your IoT Device</h2>
-            <p className="text-slate-300 mb-2">Dashboard is ready and waiting for real-time data from your ESP32.</p>
-            <p className="text-sm text-slate-500 mb-4">No simulated data will be shown. Start your device to see live metrics.</p>
-            <div className="bg-slate-800 p-3 rounded-lg border border-slate-600 text-left">
-              <p className="text-xs text-cyan-400 font-mono mb-1">Firebase URL:</p>
-              <p className="text-xs text-slate-400 font-mono break-all">dashboard-s37f-default-rtdb.firebaseio.com</p>
-            </div>
-          </div>
-        </div>
-      )}
-      
-       {!isLive && isDataAvailable && (
-        <div className="absolute inset-0 bg-slate-800/80 backdrop-blur-sm flex items-center justify-center z-30 rounded-lg">
-          <div className="text-center p-8 bg-slate-900 rounded-xl shadow-lg border border-slate-700">
-            <h2 className="text-2xl font-bold text-yellow-400 mb-2">Data Paused</h2>
-            <p className="text-slate-300">Real-time updates are paused. Press 'Live' in the header to resume.</p>
-          </div>
-        </div>
-      )}
-      
       {/* Data Cards Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-6 mb-4 md:mb-6">
         <PausableWrapper isPaused={!!pausedStates.ldrValue} onTogglePause={() => togglePause('ldrValue')} isLive={isLive}>
